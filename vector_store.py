@@ -1,12 +1,15 @@
-from typing import List, Optional, Any
-from pydantic import BaseModel
+import os
+from typing import Any, List, Optional
+
+from langchain.docstore.document import Document
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-from langchain.docstore.document import Document
-import os
+from pydantic import BaseModel
+
 
 class VectorStoreWrapper(BaseModel):
     """Wrapper for a VectorStore object. This is used to serialize the vector store to disk and load it back in again."""
+
     embedding_type: str = "openai"
     vector_store_type: str = "faiss"
     load_path: Optional[str] = None
@@ -27,5 +30,3 @@ class VectorStoreWrapper(BaseModel):
             return vector_store
         else:
             raise ValueError(f"Unknown vector store type {self.vector_store_type}")
-        
-    

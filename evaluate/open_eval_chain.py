@@ -8,6 +8,7 @@ from langchain.llms.base import BaseLLM
 
 from prompt_templates.eval_templates import PROMPT
 
+
 class QAOpenEvalChain(LLMChain):
     """LLM Chain specifically for evaluating question answering w/out GT"""
 

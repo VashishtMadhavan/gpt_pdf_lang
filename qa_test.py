@@ -1,10 +1,10 @@
-from vector_store import VectorStoreWrapper
-from models.retrieval import RetrievalModel
-from evaluate.open_eval_chain import QAOpenEvalChain
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain import OpenAI
-from langchain.document_loaders import PyPDFLoader, DirectoryLoader
+from langchain.document_loaders import DirectoryLoader, PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from evaluate.open_eval_chain import QAOpenEvalChain
+from models.retrieval import RetrievalModel
+from vector_store import VectorStoreWrapper
 
 ## Step 1: Load in data
 filepath = "/Users/vashishtmadhavan/Downloads/sample-layout-1.pdf"
@@ -13,7 +13,9 @@ loader = DirectoryLoader(path="examples/", glob="*.pdf", loader_cls=PyPDFLoader)
 docs = loader.load()
 
 ## Step 2: Split/Preprocess doc
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, separators=["\n \n","\n\n", "\n", " ", ""])
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=3000, separators=["\n \n", "\n\n", "\n", " ", ""]
+)
 split_docs = text_splitter.split_documents(docs)
 
 ## Step 3: Embed docs and create index
