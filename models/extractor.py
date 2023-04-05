@@ -1,6 +1,4 @@
-from collections import defaultdict
-import re
-from typing import List, Dict, Any, NamedTuple, Optional, Tuple, Type
+from typing import List, Any, NamedTuple, Tuple, Type
 from models.utils import find_fuzzy_match
 from pydantic import BaseModel
 from models.base import BaseDocQAModel
@@ -13,7 +11,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import HumanMessagePromptTemplate, ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 
-from difflib import SequenceMatcher
 
 class ExtractionResult(NamedTuple):
     """A named tuple for storing the results of an extraction"""

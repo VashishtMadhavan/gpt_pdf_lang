@@ -1,15 +1,15 @@
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from vector_store import VectorStoreWrapper
-from models.retrieval import RetrievalModel
+from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyPDFLoader, DirectoryLoader
 
+from models.retrieval import RetrievalModel
+from vector_store import VectorStoreWrapper
 
 loader = DirectoryLoader(path="examples/", glob="*.pdf", loader_cls=PyPDFLoader)
 faiss_path = "examples_index/"
 docs = loader.load()
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, separators=["\n \n","\n\n", "\n", " ", ""])
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000,  separators=["\n \n","\n\n", "\n", " ", ""])
 split_docs = text_splitter.split_documents(docs)
 db = VectorStoreWrapper(load_path=faiss_path).get_index(split_docs)
 

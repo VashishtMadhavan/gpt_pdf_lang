@@ -1,4 +1,3 @@
-from loaders.pdf_loader import PDFLoader
 from vector_store import VectorStoreWrapper
 from models.retrieval import RetrievalModel
 from evaluate.open_eval_chain import QAOpenEvalChain

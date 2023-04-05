@@ -1,8 +1,7 @@
-from typing import NamedTuple, List, Optional, Tuple
+from typing import NamedTuple, List, Tuple
 from models.base import BaseDocQAModel
 from models.utils import find_fuzzy_match
 from prompt_templates.qa_templates import SEARCH_PROMPT
-from difflib import SequenceMatcher
 
 from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import HumanMessagePromptTemplate, ChatPromptTemplate
