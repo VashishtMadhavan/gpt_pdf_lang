@@ -1,9 +1,7 @@
-import logo from './logo.svg';
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa'
 import { Document, Page, pdfjs} from 'react-pdf'
 import './App.css';
-
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 const api_endpoint = 'http://localhost:8000/';
 
@@ -28,7 +26,7 @@ const SearchInput = (props) => {
                   type="text"
                   name="search"
                   id="search"
-                  placeholder={isExtraction? `Extract an entity from your document...` : `Ask a question about your document...`}
+                  placeholder={isExtraction? `Define a JSON dict of entities and descriptions. ex: {"name": "the name of the company"}` : `Ask a question about your document...`}
                   className="focus:ring-0 block w-full rounded-none rounded-l-md border-0 py-1.5 sm:ring-1 sm:ring-inset sm:ring-gray-300 sm:dark:ring-neutral-500 sm:focus:ring-2 sm:focus:ring-inset sm:focus:ring-blue-600 sm:dark:focus:ring-blue-600 sm:text-sm sm:leading-6 bg-transparent dark:placeholder-neutral-400"
                   value={value}
                   onChange={onSearchChange}

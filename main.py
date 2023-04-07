@@ -1,12 +1,14 @@
 from typing import Any, Dict
-
+import json
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from models.extractor import ExtractionModel
 
 from models.retrieval import RetrievalModel
 from vector_store import VectorStoreWrapper
+from pydantic import BaseModel, Field
 
 FAISS_PATH = "examples_index"
 
@@ -57,7 +59,7 @@ def search(query: str) -> Dict[str, Any]:
         query (str): The question to ask the LLM
 
     Returns:
-        response: File response for Fast API.
+        Dict: The response of search in the db
     """
     qa = RetrievalModel(
         retriever=db.as_retriever(search_kwargs={"k": 5}), with_sources=True
@@ -71,4 +73,27 @@ def search(query: str) -> Dict[str, Any]:
     }
 
 
-# TODO: Create an upload router for files
+@app.get("/extract")
+def extract(entity_json: str) -> Dict[str, Any]:
+    """Run extraction model on a set of documents
+
+    Args:
+        entity_json (str): JSON string outlining entities to extract
+
+    Returns:
+        response: File response for Fast API.
+    """
+    entities = json.loads(entity_json)
+    for name, description in entities.items():
+        entities[name] = Field(description=description)
+    # Creating a new pydantic object from the entity
+    FormatModel = type("FormatModel", (BaseModel,), entities)
+
+    extractor = ExtractionModel(format_model=FormatModel)
+    result = extractor.run(docs)
+    return {
+        "message": result.answer,
+        "page_id": result.page_id,
+        "char_offset": result.char_offset,
+        "items": result.source_docs,
+    }
