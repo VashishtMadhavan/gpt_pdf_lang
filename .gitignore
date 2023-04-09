@@ -3,6 +3,9 @@ __pycache__
 *.py[cod]
 *$py.class
 
+# faiss indexes
+*_index
+
 # mac files
 .DS_Store
 
