@@ -5,7 +5,7 @@ function SearchButton(props) {
     return (
         <button
             type="submit"
-            className="bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-700 ml-3"
+            className="text-white bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-700 ml-3"
         >
             <span className="hidden md:block">{isExtraction ? 'Extract' : 'Search'}</span>
         </button>
