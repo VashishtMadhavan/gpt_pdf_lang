@@ -1,5 +1,7 @@
-const LoadingSpinner = (props) => {
-    const { isLoading } = props
+import React from 'react';
+
+function LoadingSpinner(props) {
+    const {isLoading} = props;
     return isLoading ? (
         <div role="status" className="my-4 flex justify-center items-center">
             <svg
@@ -23,6 +25,6 @@ const LoadingSpinner = (props) => {
     ) : (
         <></>
     )
-  }
+}
 
 export default LoadingSpinner

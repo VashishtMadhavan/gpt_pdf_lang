@@ -1,30 +1,31 @@
-const SearchButton = (props) => {
+import React from 'react';
+
+function SearchButton(props) {
     const { isExtraction } = props
     return (
         <button
             type="submit"
-            className="text-white bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-700 ml-3"
+            className="bg-blue-600 focus:ring-2 focus:ring-blue-300 focus:outline-none inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm hover:bg-blue-700 ml-3"
         >
             <span className="hidden md:block">{isExtraction ? 'Extract' : 'Search'}</span>
         </button>
     )
 }
 
-const ModeButton = (props) => {
+function ModeButton(props) {
     const { title, onClick } = props;
     return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-x-1.5 rounded-md bg-[#ebf0f4] dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 shadow-sm focus-visible:outline focus-visible:outline-2 hover:bg-gray-400 focus-visible:outline-offset-2 "
-      onClick={onClick}
-    >
-      {/* {icon} */}
-      {title && <span className="hidden md:block">{title}</span>}
-    </button>
-  )
+        <button
+        type="button"
+        className="inline-flex items-center gap-x-1.5 rounded-md bg-[#ebf0f4] dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 shadow-sm focus-visible:outline focus-visible:outline-2 hover:bg-gray-400 focus-visible:outline-offset-2 "
+        onClick={onClick}
+        >
+        {title && <span className="hidden md:block">{title}</span>}
+        </button>
+    )
 }
 
-const PrevButton = (props) => {
+function PrevButton(props) {
     const { setItemIndex, itemIndex } = props;
     return (
       <button
@@ -51,9 +52,9 @@ const PrevButton = (props) => {
         </svg>
       </button>
     )
-  }
+}
   
-  const NextButton = (props) => {
+function NextButton(props) {
     const { setItemIndex, itemIndex, maxItemIndex} = props;
     return (
       <button
@@ -79,6 +80,6 @@ const PrevButton = (props) => {
         </svg>
       </button>
     )
-  }
+}
 
-  export { SearchButton, ModeButton, PrevButton, NextButton};
+export {SearchButton, ModeButton, PrevButton, NextButton};

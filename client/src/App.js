@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+// Components
+import SearchInput from './inputs'
+import LoadingSpinner from './spinner'
+import { PDFViewer } from './viewer'
+import { SearchButton, ModeButton, PrevButton, NextButton} from './buttons'
 import './App.css';
-import {SearchButton, ModeButton, PrevButton, NextButton} from './components/buttons'
-import SearchInput from './components/inputs'
-import LoadingSpinner from './components/spinner'
-import { PDFViewer } from './components/viewer'
+
 
 const api_endpoint = 'http://localhost:8000/';
 
@@ -26,6 +28,7 @@ const PageItem = (props) => {
     </div>
   )
 }
+
 
 function App() {
   const [result, setResult] = useState('');
@@ -146,7 +149,7 @@ function App() {
         <div className="flex flex-col text-white sm:p-6">
           {result && !isLoading ? (
           <div>
-            <div className="flex flex-col text-white border-hidden">
+            <div className="flex flex-col text-white text-md">
               <h2 className="text-2xl font-bold">References</h2>
             </div>
             <div className="flex flex-col text-white justify-center border-hidden">
