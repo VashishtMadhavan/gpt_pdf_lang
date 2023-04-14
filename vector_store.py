@@ -14,7 +14,7 @@ class VectorStoreWrapper(BaseModel):
     vector_store_type: str = "faiss"
     load_path: Optional[str] = None
 
-    def _get_embeddings(self):
+    def _get_embeddings(self) -> Any:
         if self.embedding_type == "openai":
             return OpenAIEmbeddings()
         else:
@@ -25,8 +25,9 @@ class VectorStoreWrapper(BaseModel):
             embeddings = self._get_embeddings()
             if self.load_path and os.path.exists(self.load_path):
                 return FAISS.load_local(self.load_path, embeddings)
-            vector_store = FAISS.from_documents(docs, embeddings)
-            vector_store.save_local(self.load_path)
-            return vector_store
+            db = FAISS.from_documents(docs, embeddings)
+            if self.load_path:
+                db.save_local(self.load_path)
+            return db
         else:
             raise ValueError(f"Unknown vector store type {self.vector_store_type}")

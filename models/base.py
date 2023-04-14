@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from langchain.prompts import PromptTemplate
+from langchain.prompts.chat import ChatPromptTemplate
 
 
 class BaseDocQAModel(ABC):
@@ -11,5 +11,5 @@ class BaseDocQAModel(ABC):
 
     @property
     @abstractmethod
-    def prompt(self) -> PromptTemplate:
+    def prompt(self) -> ChatPromptTemplate:
         """The prompt associated with the specific model"""

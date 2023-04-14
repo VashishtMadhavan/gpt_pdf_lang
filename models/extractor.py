@@ -1,10 +1,9 @@
-from typing import Any, List, NamedTuple, Tuple, Type
+from typing import Any, Dict, List, NamedTuple, Tuple, Type
 
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
 from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
 from pydantic import BaseModel
 
@@ -26,7 +25,10 @@ class ExtractionModel(BaseDocQAModel):
     """ A model for extraction per page"""
 
     def __init__(
-        self, format_model: Type[BaseModel], find_matches: bool = True, **kwargs
+        self,
+        format_model: Type[BaseModel],
+        find_matches: bool = True,
+        **kwargs: Dict[str, Any],
     ) -> None:
         super().__init__(**kwargs)
         self.find_matches = find_matches
@@ -36,7 +38,7 @@ class ExtractionModel(BaseDocQAModel):
         self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
 
     @property
-    def prompt(self) -> PromptTemplate:
+    def prompt(self) -> ChatPromptTemplate:
         prompt_template = PER_DOC_PROMPT
         human_template = HumanMessagePromptTemplate.from_template(prompt_template)
         return ChatPromptTemplate(

@@ -1,0 +1,29 @@
+[tool.black]
+line-length=88
+
+[tool.ruff]
+line-length = 88
+select = [
+  "B",
+  "E",
+  "F",
+  "W",
+  "I",
+]
+ignore = [
+    "E501"
+]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".env",
+    ".git",
+    ".mypy_cache",
+    ".venv",
+]
+
+[tool.mypy]
+ignore_missing_imports = "True"
+disallow_untyped_defs = "True"
+disallow_incomplete_defs = "True"
+no_implicit_optional = "True"
+disable_error_code = "call-arg, arg-type, attr-defined"

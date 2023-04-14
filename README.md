@@ -6,3 +6,12 @@
 * Start running backend server:    `uvicorn main:app --reload`
 * Install frontend requirements:    `cd client; npm install`
 * In a separate tab, run the React app:    `npm start`
+
+
+## Contributing
+
+If you plan to contribute make sure to format & lint your code before committing:
+```
+make format
+make lint
+```
