@@ -1,6 +1,6 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 import json
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -19,7 +19,6 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 split_docs = text_splitter.split_documents(docs)
 db = VectorStoreWrapper(load_path=FAISS_PATH).get_index(split_docs)
-
 app = FastAPI()
 
 # Add CORS middleware
@@ -31,6 +30,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Backend route to handle file upload from FE
+@app.post("/upload")
+def upload_files(files: List[UploadFile]) -> Dict[str, Any]:
+    """Upload multiple files to the backend.
+
+    Args:
+        files (List[UploadFile], optional): List of files to upload. Defaults to File(...).
+
+    Returns:
+        Dict: Response message
+    """
+    _docs = []
+    for file in files:
+        print(f"Upload file: {file.filename}")
+        local_filename = "examples/" + file.filename
+        with open(local_filename, "wb") as f:
+            f.write(file.file.read())
+        # Add files to the index
+        if local_filename.endswith(".pdf"):
+            single_pdf_loader = PyPDFLoader(local_filename)
+            _docs += text_splitter.split_documents(single_pdf_loader.load())
+            print("Adding split_docs")
+        else:
+            raise ValueError("Only PDF files are supported")
+    db.add_documents(_docs)
+    print("Done adding files to vector DB")
+    return {"message": "File uploaded successfully"}
 
 
 @app.get("/pdf")

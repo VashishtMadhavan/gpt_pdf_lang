@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import SearchInput from './inputs'
 import LoadingSpinner from './spinner'
 import { PDFViewer } from './viewer'
-import { SearchButton, ModeButton, PrevButton, NextButton} from './buttons'
+import { SearchButton, ModeButton, PrevButton, NextButton, FileUploadButton} from './buttons'
 import './App.css';
 
 
@@ -22,7 +22,7 @@ const PageItem = (props) => {
       <div className='grid grid-cols-2 gap-2'>
           <PDFViewer
             url={pageItem.metadata["source"]}
-            pageNumber={pageItem.metadata["page"]}
+            pageNumber={pageItem.metadata["page"] + 1}
           />
       </div>
     </div>
@@ -35,6 +35,7 @@ function App() {
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
   const [itemIndex, setItemIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   // setting other properties
   const [pageId, setPageId] = useState(1);
@@ -103,6 +104,32 @@ function App() {
     setCharOffset([-1, -1])
   }
 
+  // create a function to handle the upload button
+  const handleUploadButtonClick = (event) => {
+    // add multiple files to form data
+    setProgress(0);
+    const formData = new FormData();
+    for (const file of event.target.files) {
+      formData.append('files', file);
+    }
+    //post the files to the server
+    fetch(`${api_endpoint}upload`, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Success:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+    // TODO: probably fix this
+    setProgress(50);
+    setTimeout(() => setProgress(75), 3000); // Simulate upload delay
+    setTimeout(() => setProgress(100), 6000); // Simulate upload delay
+  }
+
 
   return (
     <main className='h-screen bg-white dark:bg-dark-900 dark:text-white overflow-y-auto max-h-screen'>
@@ -114,6 +141,7 @@ function App() {
             <div className="inline-flex gap-x-1.5 align-middle justify-center">
                 <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} />
                 <ModeButton title="Extraction Mode" onClick={handleSetExtractionMode} />
+                <FileUploadButton onUpload={handleUploadButtonClick} progress={progress}/>
             </div>
             <div className='hidden sm:block sm:px-6 sm:pb-2'>
                 <form

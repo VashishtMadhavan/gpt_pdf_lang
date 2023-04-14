@@ -82,4 +82,27 @@ function NextButton(props) {
     )
 }
 
-export {SearchButton, ModeButton, PrevButton, NextButton};
+function FileUploadButton(props) {
+    const { onUpload, progress } = props;
+    //TODO: fix style of progress bar
+    return (
+      <label
+        className="inline-flex items-center gap-x-1.5 rounded-md bg-[#ebf0f4] dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 shadow-sm focus-visible:outline focus-visible:outline-2 hover:bg-gray-400 focus-visible:outline-offset-2 "
+      >
+        <span className="hidden md:block">Upload Data</span>
+        <input
+            id="contained-button-file"
+            type="file"
+            style={{ display: 'none'}}
+            multiple
+            onChange={onUpload}
+        />
+        {progress > 0 && progress < 100 && 
+          <progress
+          value={progress} 
+          max="100" />}
+      </label>
+    )
+}
+
+export {SearchButton, ModeButton, PrevButton, NextButton, FileUploadButton};
