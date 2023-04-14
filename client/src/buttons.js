@@ -13,11 +13,13 @@ function SearchButton(props) {
 }
 
 function ModeButton(props) {
-    const { title, onClick } = props;
+    const { title, onClick, pressed } = props;
+    const classStyle = "inline-flex items-center gap-x-1.5 rounded-md dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 hover:bg-gray-500 "
+
     return (
         <button
         type="button"
-        className="inline-flex items-center gap-x-1.5 rounded-md bg-[#ebf0f4] dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 shadow-sm focus-visible:outline focus-visible:outline-2 hover:bg-gray-400 focus-visible:outline-offset-2 "
+        className={pressed ? classStyle + "bg-gray-400" : classStyle + "bg-[#ebf0f4]"}
         onClick={onClick}
         >
         {title && <span className="hidden md:block">{title}</span>}

@@ -112,8 +112,8 @@ function App() {
               PDF GPT
           </h1>
             <div className="inline-flex gap-x-1.5 align-middle justify-center">
-                <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} />
-                <ModeButton title="Extraction Mode" onClick={handleSetExtractionMode} />
+                <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} pressed={!extractionMode}/>
+                <ModeButton title="Extraction Mode" onClick={handleSetExtractionMode} pressed={extractionMode}/>
             </div>
             <div className='hidden sm:block sm:px-6 sm:pb-2'>
                 <form
