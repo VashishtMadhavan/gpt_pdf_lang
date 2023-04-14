@@ -1,10 +1,9 @@
-from typing import List, NamedTuple, Tuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
-from langchain.prompts import PromptTemplate
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain.schema import BaseRetriever
 
@@ -27,7 +26,7 @@ class RetrievalResult(NamedTuple):
 class RetrievalModel(BaseDocQAModel):
     """A model for performing document QA using a retrieval-based approach"""
 
-    def __init__(self, retriever: BaseRetriever, **kwargs) -> None:
+    def __init__(self, retriever: BaseRetriever, **kwargs: Dict[str, Any]) -> None:
         super().__init__(**kwargs)
         self.retriever = retriever
         self.llm = ChatOpenAI(temperature=0)
@@ -41,7 +40,7 @@ class RetrievalModel(BaseDocQAModel):
         )
 
     @property
-    def prompt(self) -> PromptTemplate:
+    def prompt(self) -> ChatPromptTemplate:
         human_template = HumanMessagePromptTemplate.from_template(SEARCH_PROMPT)
         return ChatPromptTemplate.from_messages([human_template])
 

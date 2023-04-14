@@ -1,14 +1,15 @@
-from typing import Any, Dict
 import json
+from typing import Any, Dict
+
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from models.extractor import ExtractionModel
+from pydantic import BaseModel, Field
 
+from models.extractor import ExtractionModel
 from models.retrieval import RetrievalModel
 from vector_store import VectorStoreWrapper
-from pydantic import BaseModel, Field
 
 FAISS_PATH = "examples_index"
 
@@ -90,10 +91,10 @@ def extract(entity_json: str) -> Dict[str, Any]:
     FormatModel = type("FormatModel", (BaseModel,), entities)
 
     extractor = ExtractionModel(format_model=FormatModel)
-    result = extractor.run(docs)
+    result = extractor.run(docs)[0]
     return {
-        "message": result.answer,
+        "message": result.entities[0],
         "page_id": result.page_id,
-        "char_offset": result.char_offset,
-        "items": result.source_docs,
+        "char_offset": result.offsets[0],
+        "items": result.source,
     }
