@@ -5,7 +5,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
-from pydantic import BaseModel
+from pydantic import BaseModel as PydanticBaseModel
 
 from models.base import BaseDocQAModel
 from models.utils import find_fuzzy_match
@@ -20,9 +20,14 @@ class ExtractionResult(NamedTuple):
     offsets: List[Tuple[int, int]]
     entities: List[str]
 
+class BaseModel(PydanticBaseModel):
+    """Allow arbitrary types in pydantic models"""
+
+    class Config:
+        arbitrary_types_allowed = True
 
 class ExtractionModel(BaseDocQAModel):
-    """ A model for extraction per page"""
+    """A model for extraction per page"""
 
     def __init__(
         self,

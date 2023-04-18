@@ -73,7 +73,7 @@ def search(query: str) -> Dict[str, Any]:
 
 
 @app.get("/extract")
-def extract(entity_json: str) -> Dict[str, Any]:
+def extract(query: str) -> Dict[str, Any]:
     """Run extraction model on a set of documents
 
     Args:
@@ -82,7 +82,7 @@ def extract(entity_json: str) -> Dict[str, Any]:
     Returns:
         response: File response for Fast API.
     """
-    entities = json.loads(entity_json)
+    entities = json.loads(query)
     for name, description in entities.items():
         entities[name] = Field(description=description)
     # Creating a new pydantic object from the entity
