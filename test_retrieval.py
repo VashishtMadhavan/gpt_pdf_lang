@@ -7,8 +7,7 @@ from models.retrieval import RetrievalModel
 from vector_store import VectorStoreWrapper
 
 ## Step 1: Load in data
-filepath = "/Users/vashishtmadhavan/Downloads/sample-layout-1.pdf"
-faiss_path = "fass_index_msft"
+faiss_path = "examples_index"
 loader = DirectoryLoader(path="examples/", glob="*.pdf", loader_cls=PyPDFLoader)
 docs = loader.load()
 
@@ -23,10 +22,15 @@ db = VectorStoreWrapper(load_path=faiss_path).get_index(split_docs)
 
 ## Step 5: Ask a question against the index using a QA chain
 query = "What is the name of the company?"
-qa = RetrievalModel(retriever=db.as_retriever(k=5), with_sources=True)
-result = qa.run(query)
+model = RetrievalModel(
+    retriever=db.as_retriever(search_kwargs={"k": 5}), with_sources=True
+)
+result = model.run(query)
+print(f"Result: {result}")
+
 
 # Step 6: Evaluate the result
 eval_chain = QAOpenEvalChain.from_llm(llm=OpenAI(temperature=0))
 example = {"query": query, "context": result.context, "result": result.answer}
 eval_result = eval_chain.evaluate([example])
+print(f"Eval Result: {eval_result}")
