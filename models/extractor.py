@@ -18,9 +18,8 @@ class ExtractionResult(NamedTuple):
 
     page_id: int
     source: str
-    source_doc: Document
     offsets: List[Tuple[int, int]]
-    entities: List[str]
+    entities: Dict[str, str]
 
 class ExtractionModel(BaseDocQAModel):
     """A model for extraction per page"""
@@ -54,7 +53,7 @@ class ExtractionModel(BaseDocQAModel):
         self, page_content: str, result: Any
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
         offsets = []
-        entities = []
+        entities = {}
         for entity_name in result.__fields__.keys():
             entity_value = getattr(result, entity_name)
             # Could have multiple matches per page
@@ -62,9 +61,9 @@ class ExtractionModel(BaseDocQAModel):
                 match = find_fuzzy_match(entity_value, page_content)
                 if match:
                     offsets.append(match)
-                    entities.append(entity_value)
+                    entities[entity_name] = entity_value
             else:
-                entities.append(entity_value)
+                entities[entity_name] = entity_value
                 offsets.append((-1, -1))
         return offsets, entities
 
@@ -97,7 +96,6 @@ class ExtractionModel(BaseDocQAModel):
                     ExtractionResult(
                         page_id=doc.metadata["page"],
                         source=doc.metadata["source"],
-                        source_doc=doc,
                         offsets=offsets,
                         entities=entities,
                     )

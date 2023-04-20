@@ -1,7 +1,10 @@
+import csv
 import json
-from typing import Any, Dict
+from io import StringIO
+from typing import Any, Dict, List
 
 from fastapi import FastAPI, Response
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -71,6 +74,25 @@ def search(query: str) -> Dict[str, Any]:
         "items": result.source_docs,
     }
 
+# TODO(andy): move this out of this file eventually
+def generate_csv(entities: Dict, results: List[Any]):
+    """Generate a CSV file from a list of results.
+
+    Args:
+        results (List[Any]): The results to generate a CSV file from.
+
+    Returns:
+        output: A StringIO object containing the CSV file.
+    """
+    output = StringIO()
+    fieldnames = list(entities.keys())
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for result in results:
+        writer.writerow(result.entities)
+    output.seek(0)
+    return output
 
 @app.get("/extract")
 def extract(entity_json: str) -> Dict[str, Any]:
@@ -88,12 +110,12 @@ def extract(entity_json: str) -> Dict[str, Any]:
     format_model = create_model("FormatModel", **entities)
 
     extractor = ExtractionModel(format_model=format_model)
-    result = extractor.run(docs)[0]
+    results = extractor.run(docs[:3]) # TODO(andy): only running on the first 3 pages for testing
 
-    # TODO(andy): This is a hack to get the page to render
-    return {
-        "message": result.entities[0],
-        "page_id": result.page_id,
-        "char_offset": result.offsets[0],
-        "items": [result.source_doc],
-    }
+    # Generate a CSV file
+    csv_file = generate_csv(entities, results)
+
+    return StreamingResponse(csv_file, media_type="text/csv", headers={
+        'Content-Disposition': 'attachment; filename=export.csv',
+        'Access-Control-Expose-Headers': 'Content-Disposition'
+    })
