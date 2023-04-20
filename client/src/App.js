@@ -9,6 +9,11 @@ import './App.css';
 
 const api_endpoint = 'http://localhost:8000/';
 
+const Mode = {
+  RETRIEVAL: 'retrieval',
+  EXTRACTION: 'extraction',
+}
+
 const PageItem = (props) => {
   const { items, itemIndex} = props;
   const pageItem = items[itemIndex];
@@ -39,7 +44,7 @@ function App() {
 
   // Other properties
   const [isLoading, setIsLoading] = useState(false);
-  const [extractionMode, setExtractionMode] = useState(false);
+  const [mode, setMode] = useState(Mode.RETRIEVAL);
 
   const handleSearchChange = (event) => {
     const { value } = event.target
@@ -57,7 +62,7 @@ function App() {
       return
     }
     setIsLoading(true);
-    if (!extractionMode) {
+    if (mode === Mode.RETRIEVAL) {
       fetch(`${api_endpoint}search?query=${query}`)
         .then(response => response.json())
         .then(result => {
@@ -66,7 +71,7 @@ function App() {
           setIsLoading(false);
         })
         .catch(error => console.error(error));
-    } else {
+    } else if (mode === Mode.EXTRACTION) {
       fetch(`${api_endpoint}extract?entity_json=${query}`)
         .then(response => response.json())
         .then(result => {
@@ -78,12 +83,12 @@ function App() {
   }
 
   const handleSetRetrievalMode = (event) => {
-    setExtractionMode(false);
+    setMode(Mode.RETRIEVAL);
     setQuery('')
   }
 
   const handleSetExtractionMode = (event) => {
-    setExtractionMode(true);
+    setMode(Mode.EXTRACTION);
     setQuery('')
     setAnswer('')
     setItems([])
@@ -98,8 +103,8 @@ function App() {
               PDF GPT
           </h1>
             <div className="inline-flex gap-x-1.5 align-middle justify-center">
-                <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} pressed={!extractionMode}/>
-                <ModeButton title="Extraction Mode" onClick={handleSetExtractionMode} pressed={extractionMode}/>
+                <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} pressed={mode === Mode.RETRIEVAL}/>
+                <ModeButton title="Extraction Mode" onClick={handleSetExtractionMode} pressed={mode === Mode.EXTRACTION}/>
             </div>
             <div className='hidden sm:block sm:px-6 sm:pb-2'>
                 <form
@@ -112,12 +117,12 @@ function App() {
                 >
                     <SearchInput
                         value={query}
-                        isExtraction={extractionMode}
+                        isExtraction={mode === Mode.EXTRACTION}
                         onSearchChange={handleSearchChange}
                         onClear={handleClearSearch}
                     />
                     <SearchButton
-                      isExtraction={extractionMode}
+                      isExtraction={mode === Mode.EXTRACTION}
                     />
                 </form>
           </div>
