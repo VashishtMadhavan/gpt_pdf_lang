@@ -67,9 +67,7 @@ def search(query: str) -> Dict[str, Any]:
     )
     result = qa.run(query)
     return {
-        "message": result.answer,
-        "page_id": result.page_id,
-        "char_offset": result.char_offset,
+        "answer": result.answer,
         "items": result.source_docs,
     }
 
@@ -93,8 +91,5 @@ def extract(entity_json: str) -> Dict[str, Any]:
     extractor = ExtractionModel(format_model=FormatModel)
     result = extractor.run(docs)[0]
     return {
-        "message": result.entities[0],
-        "page_id": result.page_id,
-        "char_offset": result.offsets[0],
-        "items": result.source,
+        "items": result,
     }

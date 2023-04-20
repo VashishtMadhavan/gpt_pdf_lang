@@ -12,6 +12,7 @@ const api_endpoint = 'http://localhost:8000/';
 const PageItem = (props) => {
   const { items, itemIndex} = props;
   const pageItem = items[itemIndex];
+  // TODO: need a different div here for extraction mode.
   return (
     <div className="flex flex-col text-white sm:px-6 sm:pb-2">
       <div className="grid grid-cols-1 p-2 pt-4 border-t border-coolGray-200">
@@ -31,14 +32,12 @@ const PageItem = (props) => {
 
 
 function App() {
-  const [result, setResult] = useState('');
+  const [answer, setAnswer] = useState('');
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
   const [itemIndex, setItemIndex] = useState(0);
 
-  // setting other properties
-  const [pageId, setPageId] = useState(1);
-  const [charOffset, setCharOffset] = useState([-1, -1]);
+  // Other properties
   const [isLoading, setIsLoading] = useState(false);
   const [extractionMode, setExtractionMode] = useState(false);
 
@@ -49,11 +48,8 @@ function App() {
 
   const handleClearSearch = () => {
       setQuery('')
-      setResult('')
+      setAnswer('')
       setItems([])
-      // clearing other properties
-      setPageId(1)
-      setCharOffset([-1, -1])
   }
   
   const handleSearchButtonClick = (event) => {
@@ -65,11 +61,8 @@ function App() {
       fetch(`${api_endpoint}search?query=${query}`)
         .then(response => response.json())
         .then(result => {
-          setResult(result.message)
+          setAnswer(result.answer)
           setItems(result.items)
-          //set other properties
-          setPageId(result.page_id)
-          setCharOffset(result.char_offset)
           setIsLoading(false);
         })
         .catch(error => console.error(error));
@@ -77,11 +70,7 @@ function App() {
       fetch(`${api_endpoint}extract?query=${query}`)
         .then(response => response.json())
         .then(result => {
-          setResult(result.message)
           setItems(result.items)
-          //set other properties
-          setPageId(result.page_id)
-          setCharOffset(result.char_offset)
           setIsLoading(false);
         })
         .catch(error => console.error(error));
@@ -96,11 +85,8 @@ function App() {
   const handleSetExtractionMode = (event) => {
     setExtractionMode(true);
     setQuery('')
-    setResult('')
+    setAnswer('')
     setItems([])
-    // clearing other properties
-    setPageId(1)
-    setCharOffset([-1, -1])
   }
 
 
@@ -139,15 +125,15 @@ function App() {
         <div className="flex flex-col text-white sm:p-2">
           <div className="hidden sm:flex sm:flex-col h-full w-full max-h-[23rem] lg:max-h-full overflow-y-auto items-center">
             <LoadingSpinner isLoading={isLoading} />
-            {result && !isLoading ? (
-                  <p className='flex justify-center w-full'>{result}</p>
+            {answer && !isLoading ? (
+                  <p className='flex justify-center w-full'>{answer}</p>
               ) : (
                 <></>
               )}
           </div>
         </div>
         <div className="flex flex-col text-white sm:p-6">
-          {result && !isLoading ? (
+          {answer && !isLoading ? (
           <div>
             <div className="flex flex-col text-white text-md">
               <h2 className="text-2xl font-bold">References</h2>
