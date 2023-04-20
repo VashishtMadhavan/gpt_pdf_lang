@@ -67,7 +67,7 @@ function App() {
         })
         .catch(error => console.error(error));
     } else {
-      fetch(`${api_endpoint}extract?query=${query}`)
+      fetch(`${api_endpoint}extract?entity_json=${query}`)
         .then(response => response.json())
         .then(result => {
           setItems(result.items)

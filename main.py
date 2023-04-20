@@ -5,7 +5,7 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pydantic import BaseModel, Field
+from pydantic import create_model
 
 from models.extractor import ExtractionModel
 from models.retrieval import RetrievalModel
@@ -73,7 +73,7 @@ def search(query: str) -> Dict[str, Any]:
 
 
 @app.get("/extract")
-def extract(query: str) -> Dict[str, Any]:
+def extract(entity_json: str) -> Dict[str, Any]:
     """Run extraction model on a set of documents
 
     Args:
@@ -82,14 +82,18 @@ def extract(query: str) -> Dict[str, Any]:
     Returns:
         response: File response for Fast API.
     """
-    entities = json.loads(query)
-    for name, description in entities.items():
-        entities[name] = Field(description=description)
-    # Creating a new pydantic object from the entity
-    FormatModel = type("FormatModel", (BaseModel,), entities)
+    entities = json.loads(entity_json)
 
-    extractor = ExtractionModel(format_model=FormatModel)
+    # Creating a new pydantic object from the entity
+    format_model = create_model("FormatModel", **entities)
+
+    extractor = ExtractionModel(format_model=format_model)
     result = extractor.run(docs)[0]
+
+    # TODO(andy): This is a hack to get the page to render
     return {
-        "items": result,
+        "message": result.entities[0],
+        "page_id": result.page_id,
+        "char_offset": result.offsets[0],
+        "items": [result.source_doc],
     }

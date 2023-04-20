@@ -3,9 +3,10 @@ from typing import Any, Dict, List, NamedTuple, Tuple, Type
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
+from langchain.schema import OutputParserException
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
-from pydantic import BaseModel as PydanticBaseModel
+from pydantic import BaseModel
 
 from models.base import BaseDocQAModel
 from models.utils import find_fuzzy_match
@@ -17,14 +18,9 @@ class ExtractionResult(NamedTuple):
 
     page_id: int
     source: str
+    source_doc: Document
     offsets: List[Tuple[int, int]]
     entities: List[str]
-
-class BaseModel(PydanticBaseModel):
-    """Allow arbitrary types in pydantic models"""
-
-    class Config:
-        arbitrary_types_allowed = True
 
 class ExtractionModel(BaseDocQAModel):
     """A model for extraction per page"""
@@ -85,15 +81,23 @@ class ExtractionModel(BaseDocQAModel):
         for doc in docs:
             question = self._get_question()
             result = self.chain.run(context=doc.page_content, question=question)
-            parsed_result = self.output_parser.parse(result)
-            offsets, entities = self._post_process_answers(
-                doc.page_content, parsed_result
-            )
+
+            try:
+                parsed_result = self.output_parser.parse(result)
+                print("Parsed result: ", parsed_result)
+                offsets, entities = self._post_process_answers(
+                    doc.page_content, parsed_result
+                )
+            except OutputParserException:
+                print("Unable to find match for doc")
+                continue
+
             if len(entities) != 0:
                 output.append(
                     ExtractionResult(
                         page_id=doc.metadata["page"],
                         source=doc.metadata["source"],
+                        source_doc=doc,
                         offsets=offsets,
                         entities=entities,
                     )
