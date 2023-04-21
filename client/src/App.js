@@ -56,7 +56,19 @@ function App() {
       setAnswer('')
       setItems([])
   }
-  
+
+  const downloadCsv = (blob) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `pdf_genie_${(new Date().toJSON().slice(0,10))}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
   const handleSearchButtonClick = (event) => {
     if (query === '') {
       return
@@ -73,10 +85,9 @@ function App() {
         .catch(error => console.error(error));
     } else if (mode === Mode.EXTRACTION) {
       fetch(`${api_endpoint}extract?entity_json=${query}`)
-        .then(response => response.json())
-        .then(result => {
-          setItems(result.items)
+        .then(response => {
           setIsLoading(false);
+          response.blob().then(blob => downloadCsv(blob))
         })
         .catch(error => console.error(error));
     }

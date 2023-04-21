@@ -1,7 +1,5 @@
-import csv
 import json
-from io import StringIO
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
@@ -74,25 +72,6 @@ def search(query: str) -> Dict[str, Any]:
         "items": result.source_docs,
     }
 
-# TODO(andy): move this out of this file eventually
-def generate_csv(entities: Dict, results: List[Any]):
-    """Generate a CSV file from a list of results.
-
-    Args:
-        results (List[Any]): The results to generate a CSV file from.
-
-    Returns:
-        output: A StringIO object containing the CSV file.
-    """
-    output = StringIO()
-    fieldnames = list(entities.keys())
-    writer = csv.DictWriter(output, fieldnames=fieldnames)
-
-    writer.writeheader()
-    for result in results:
-        writer.writerow(result.entities)
-    output.seek(0)
-    return output
 
 @app.get("/extract")
 def extract(entity_json: str) -> Dict[str, Any]:
@@ -110,12 +89,11 @@ def extract(entity_json: str) -> Dict[str, Any]:
     format_model = create_model("FormatModel", **entities)
 
     extractor = ExtractionModel(format_model=format_model)
-    results = extractor.run(docs[:3]) # TODO(andy): only running on the first 3 pages for testing
+    results = extractor.run(docs)
 
     # Generate a CSV file
-    csv_file = generate_csv(entities, results)
+    csv_file = extractor.generate_csv(entities, results)
 
     return StreamingResponse(csv_file, media_type="text/csv", headers={
-        'Content-Disposition': 'attachment; filename=export.csv',
-        'Access-Control-Expose-Headers': 'Content-Disposition'
+        'Content-Disposition': 'attachment; filename=export.csv'
     })

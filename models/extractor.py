@@ -1,3 +1,5 @@
+import csv
+from io import StringIO
 from typing import Any, Dict, List, NamedTuple, Tuple, Type
 
 from langchain.chains import LLMChain
@@ -74,6 +76,17 @@ class ExtractionModel(BaseDocQAModel):
             base_question += f"{entity_name}, "
         base_question += "of the document?"
         return base_question
+
+    def generate_csv(self, entities: Dict, results: List[Any]):
+        output = StringIO()
+        fieldnames = list(entities.keys())
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result.entities)
+        output.seek(0)
+        return output
 
     def run(self, docs: List[Document]) -> List[ExtractionResult]:
         output = []
