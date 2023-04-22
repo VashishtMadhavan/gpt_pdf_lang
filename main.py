@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import create_model
+from pydantic.fields import FieldInfo
 
 from models.extractor import ExtractionModel
 from models.retrieval import RetrievalModel
@@ -86,9 +87,10 @@ def extract(entity_json: str) -> Dict[str, Any]:
     entities = json.loads(entity_json)
 
     # Creating a new pydantic object from the entity
-    format_model = create_model("FormatModel", **entities)
+    pydantic_schema = {k: (str, FieldInfo(description=v)) for k, v in entities.items()}
+    FormatModel = create_model("FormatModel", **pydantic_schema)
 
-    extractor = ExtractionModel(format_model=format_model)
+    extractor = ExtractionModel(format_model=FormatModel)
     results = extractor.run(docs)
 
     # Generate a CSV file
