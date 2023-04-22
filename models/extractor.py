@@ -1,8 +1,11 @@
+import csv
+from io import StringIO
 from typing import Any, Dict, List, NamedTuple, Tuple, Type
 
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
+from langchain.schema import OutputParserException
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
 from pydantic import BaseModel
@@ -18,11 +21,10 @@ class ExtractionResult(NamedTuple):
     page_id: int
     source: str
     offsets: List[Tuple[int, int]]
-    entities: List[str]
-
+    entities: Dict[str, str]
 
 class ExtractionModel(BaseDocQAModel):
-    """ A model for extraction per page"""
+    """A model for extraction per page"""
 
     def __init__(
         self,
@@ -53,7 +55,7 @@ class ExtractionModel(BaseDocQAModel):
         self, page_content: str, result: Any
     ) -> Tuple[List[Tuple[int, int]], List[str]]:
         offsets = []
-        entities = []
+        entities = {}
         for entity_name in result.__fields__.keys():
             entity_value = getattr(result, entity_name)
             # Could have multiple matches per page
@@ -61,9 +63,9 @@ class ExtractionModel(BaseDocQAModel):
                 match = find_fuzzy_match(entity_value, page_content)
                 if match:
                     offsets.append(match)
-                    entities.append(entity_value)
+                    entities[entity_name] = entity_value
             else:
-                entities.append(entity_value)
+                entities[entity_name] = entity_value
                 offsets.append((-1, -1))
         return offsets, entities
 
@@ -75,15 +77,34 @@ class ExtractionModel(BaseDocQAModel):
         base_question += "of the document?"
         return base_question
 
+    def generate_csv(self, entities: Dict, results: List[Any]):
+        output = StringIO()
+        fieldnames = list(entities.keys()) + ["page_id", "source"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for result in results:
+            metadata = {"page_id": result.page_id, "source": result.source}
+            writer.writerow({**result.entities, **metadata})
+        output.seek(0)
+        return output
+
     def run(self, docs: List[Document]) -> List[ExtractionResult]:
         output = []
         for doc in docs:
             question = self._get_question()
             result = self.chain.run(context=doc.page_content, question=question)
-            parsed_result = self.output_parser.parse(result)
-            offsets, entities = self._post_process_answers(
-                doc.page_content, parsed_result
-            )
+
+            try:
+                parsed_result = self.output_parser.parse(result)
+                print("Parsed result: ", parsed_result)
+                offsets, entities = self._post_process_answers(
+                    doc.page_content, parsed_result
+                )
+            except OutputParserException:
+                print("Unable to find match for doc")
+                continue
+
             if len(entities) != 0:
                 output.append(
                     ExtractionResult(

@@ -2,10 +2,12 @@ import json
 from typing import Any, Dict
 
 from fastapi import FastAPI, Response
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pydantic import BaseModel, Field
+from pydantic import create_model
+from pydantic.fields import FieldInfo
 
 from models.extractor import ExtractionModel
 from models.retrieval import RetrievalModel
@@ -83,13 +85,17 @@ def extract(entity_json: str) -> Dict[str, Any]:
         response: File response for Fast API.
     """
     entities = json.loads(entity_json)
-    for name, description in entities.items():
-        entities[name] = Field(description=description)
+
     # Creating a new pydantic object from the entity
-    FormatModel = type("FormatModel", (BaseModel,), entities)
+    pydantic_schema = {k: (str, FieldInfo(description=v)) for k, v in entities.items()}
+    FormatModel = create_model("FormatModel", **pydantic_schema)
 
     extractor = ExtractionModel(format_model=FormatModel)
-    result = extractor.run(docs)[0]
-    return {
-        "items": result,
-    }
+    results = extractor.run(docs)
+
+    # Generate a CSV file
+    csv_file = extractor.generate_csv(entities, results)
+
+    return StreamingResponse(csv_file, media_type="text/csv", headers={
+        'Content-Disposition': 'attachment'
+    })
