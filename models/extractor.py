@@ -79,12 +79,13 @@ class ExtractionModel(BaseDocQAModel):
 
     def generate_csv(self, entities: Dict, results: List[Any]):
         output = StringIO()
-        fieldnames = list(entities.keys())
+        fieldnames = list(entities.keys()) + ["page_id", "source"]
         writer = csv.DictWriter(output, fieldnames=fieldnames)
 
         writer.writeheader()
         for result in results:
-            writer.writerow(result.entities)
+            metadata = {"page_id": result.page_id, "source": result.source}
+            writer.writerow({**result.entities, **metadata})
         output.seek(0)
         return output
 
