@@ -97,5 +97,5 @@ def extract(entity_json: str) -> Dict[str, Any]:
     csv_file = extractor.generate_csv(entities, results)
 
     return StreamingResponse(csv_file, media_type="text/csv", headers={
-        'Content-Disposition': 'attachment; filename=export.csv'
+        'Content-Disposition': 'attachment'
     })
