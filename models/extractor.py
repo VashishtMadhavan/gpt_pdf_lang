@@ -1,3 +1,4 @@
+import asyncio
 import csv
 from io import StringIO
 from typing import Any, Dict, List, NamedTuple, Tuple, Type
@@ -5,9 +6,9 @@ from typing import Any, Dict, List, NamedTuple, Tuple, Type
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
-from langchain.schema import OutputParserException
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate
+from langchain.schema import OutputParserException
 from pydantic import BaseModel
 
 from models.base import BaseDocQAModel
@@ -22,6 +23,7 @@ class ExtractionResult(NamedTuple):
     source: str
     offsets: List[Tuple[int, int]]
     entities: Dict[str, str]
+
 
 class ExtractionModel(BaseDocQAModel):
     """A model for extraction per page"""
@@ -51,9 +53,18 @@ class ExtractionModel(BaseDocQAModel):
             },
         )
 
+    @property
+    def question(self) -> str:
+        """Get a question from the question generator"""
+        base_question = "What is the "
+        for entity_name in self.format_model.__fields__.keys():
+            base_question += f"{entity_name}, "
+        base_question += "of the document?"
+        return base_question
+
     def _post_process_answers(
         self, page_content: str, result: Any
-    ) -> Tuple[List[Tuple[int, int]], List[str]]:
+    ) -> Tuple[List[Tuple[int, int]], Dict[Any, Any]]:
         offsets = []
         entities = {}
         for entity_name in result.__fields__.keys():
@@ -69,15 +80,7 @@ class ExtractionModel(BaseDocQAModel):
                 offsets.append((-1, -1))
         return offsets, entities
 
-    def _get_question(self) -> str:
-        """Get a question from the question generator"""
-        base_question = "What is the "
-        for entity_name in self.format_model.__fields__.keys():
-            base_question += f"{entity_name}, "
-        base_question += "of the document?"
-        return base_question
-
-    def generate_csv(self, entities: Dict, results: List[Any]):
+    def generate_csv(self, entities: Dict, results: List[ExtractionResult]) -> StringIO:
         output = StringIO()
         fieldnames = list(entities.keys()) + ["page_id", "source"]
         writer = csv.DictWriter(output, fieldnames=fieldnames)
@@ -89,12 +92,21 @@ class ExtractionModel(BaseDocQAModel):
         output.seek(0)
         return output
 
+    def get_similar_docs(self, db: Any, k: int = 5) -> List[Document]:
+        return db.similarity_search(self.question, k)
+
+    async def async_run(self, doc: Document, question: str) -> str:
+        return await self.chain.arun(context=doc.page_content, question=question)
+
+    async def async_run_docs(self, docs: List[Document], question: str) -> List[str]:
+        tasks = [self.async_run(doc, question) for doc in docs]
+        return await asyncio.gather(*tasks)
+
     def run(self, docs: List[Document]) -> List[ExtractionResult]:
         output = []
-        for doc in docs:
-            question = self._get_question()
-            result = self.chain.run(context=doc.page_content, question=question)
+        results = asyncio.run(self.async_run_docs(docs, self.question))
 
+        for result, doc in zip(results, docs):
             try:
                 parsed_result = self.output_parser.parse(result)
                 print("Parsed result: ", parsed_result)

@@ -3,13 +3,16 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 
 from models.extractor import ExtractionModel
+from vector_store import VectorStoreWrapper
+
+FAISS_PATH = "examples_index"
 
 ## Step 1: Load in data
 loader = DirectoryLoader(
     path="examples/", glob="msft_10q_q1_23.pdf", loader_cls=PyPDFLoader
 )
 docs = loader.load()
-
+FAISS_PATH = "examples_index"
 ## Step 2: Split/Preprocess doc
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=3000, separators=["\n \n", "\n\n", "\n", " ", ""]
@@ -23,7 +26,10 @@ class CompanyInfo(BaseModel):
     address: str = Field(description="the address of the company")
 
 
+db = VectorStoreWrapper(load_path=FAISS_PATH).get_index(split_docs)
+
 ## Step 4: Ask a question against the index using a QA chain
 model = ExtractionModel(format_model=CompanyInfo, find_matches=True)
-result = model.run(split_docs[:1])
+relevant_docs = model.get_similar_docs(db, k=100)
+result = model.run(relevant_docs)
 print(result)
