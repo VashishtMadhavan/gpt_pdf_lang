@@ -2,8 +2,8 @@ import json
 from typing import Any, Dict
 
 from fastapi import FastAPI, Response
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import create_model
@@ -75,7 +75,7 @@ def search(query: str) -> Dict[str, Any]:
 
 
 @app.get("/extract")
-def extract(entity_json: str) -> Dict[str, Any]:
+def extract(entity_json: str) -> StreamingResponse:
     """Run extraction model on a set of documents
 
     Args:
@@ -87,15 +87,18 @@ def extract(entity_json: str) -> Dict[str, Any]:
     entities = json.loads(entity_json)
 
     # Creating a new pydantic object from the entity
-    pydantic_schema = {k: (str, FieldInfo(description=v)) for k, v in entities.items()}
+    pydantic_schema: Dict[str, Any] = {
+        k: (str, FieldInfo(description=v)) for k, v in entities.items()
+    }
     FormatModel = create_model("FormatModel", **pydantic_schema)
 
     extractor = ExtractionModel(format_model=FormatModel)
-    results = extractor.run(docs)
+    # TODO: use retriever to get top 100 docs
+    results = extractor.run(docs[:100])
 
     # Generate a CSV file
     csv_file = extractor.generate_csv(entities, results)
 
-    return StreamingResponse(csv_file, media_type="text/csv", headers={
-        'Content-Disposition': 'attachment'
-    })
+    return StreamingResponse(
+        csv_file, media_type="text/csv", headers={"Content-Disposition": "attachment"}
+    )

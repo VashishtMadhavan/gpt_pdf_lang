@@ -25,5 +25,5 @@ class CompanyInfo(BaseModel):
 
 ## Step 4: Ask a question against the index using a QA chain
 model = ExtractionModel(format_model=CompanyInfo, find_matches=True)
-result = model.run(split_docs[:1])
+result = model.run(split_docs[:100])
 print(result)
