@@ -1,6 +1,5 @@
 import asyncio
 import csv
-import time
 from io import StringIO
 from typing import Any, Dict, List, NamedTuple, Tuple, Type
 
@@ -54,6 +53,15 @@ class ExtractionModel(BaseDocQAModel):
             },
         )
 
+    @property
+    def question(self) -> str:
+        """Get a question from the question generator"""
+        base_question = "What is the "
+        for entity_name in self.format_model.__fields__.keys():
+            base_question += f"{entity_name}, "
+        base_question += "of the document?"
+        return base_question
+
     def _post_process_answers(
         self, page_content: str, result: Any
     ) -> Tuple[List[Tuple[int, int]], Dict[Any, Any]]:
@@ -72,14 +80,6 @@ class ExtractionModel(BaseDocQAModel):
                 offsets.append((-1, -1))
         return offsets, entities
 
-    def _get_question(self) -> str:
-        """Get a question from the question generator"""
-        base_question = "What is the "
-        for entity_name in self.format_model.__fields__.keys():
-            base_question += f"{entity_name}, "
-        base_question += "of the document?"
-        return base_question
-
     def generate_csv(self, entities: Dict, results: List[ExtractionResult]) -> StringIO:
         output = StringIO()
         fieldnames = list(entities.keys()) + ["page_id", "source"]
@@ -92,6 +92,9 @@ class ExtractionModel(BaseDocQAModel):
         output.seek(0)
         return output
 
+    def get_similar_docs(self, db: Any, k: int = 5) -> List[Document]:
+        return db.similarity_search(self.question, k)
+
     async def async_run(self, doc: Document, question: str) -> str:
         return await self.chain.arun(context=doc.page_content, question=question)
 
@@ -101,7 +104,7 @@ class ExtractionModel(BaseDocQAModel):
 
     def run(self, docs: List[Document]) -> List[ExtractionResult]:
         output = []
-        results = asyncio.run(self.async_run_docs(docs, self._get_question()))
+        results = asyncio.run(self.async_run_docs(docs, self.question))
 
         for result, doc in zip(results, docs, strict=True):
             try:

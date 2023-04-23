@@ -93,8 +93,8 @@ def extract(entity_json: str) -> StreamingResponse:
     FormatModel = create_model("FormatModel", **pydantic_schema)
 
     extractor = ExtractionModel(format_model=FormatModel)
-    # TODO: use retriever to get top 100 docs
-    results = extractor.run(docs[:100])
+    relevant_docs = extractor.get_similar_docs(db, k=100)
+    results = extractor.run(relevant_docs)
 
     # Generate a CSV file
     csv_file = extractor.generate_csv(entities, results)
