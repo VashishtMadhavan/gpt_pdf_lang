@@ -24,6 +24,8 @@ class CompanyInfo(BaseModel):
     company: str = Field(description="the name of the company")
     ticker: str = Field(description="the ticker for the company")
     address: str = Field(description="the address of the company")
+
+
 db = VectorStoreWrapper(load_path=FAISS_PATH).get_index(split_docs)
 
 ## Step 4: Ask a question against the index using a QA chain

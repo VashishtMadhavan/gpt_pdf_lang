@@ -106,7 +106,7 @@ class ExtractionModel(BaseDocQAModel):
         output = []
         results = asyncio.run(self.async_run_docs(docs, self.question))
 
-        for result, doc in zip(results, docs, strict=True):
+        for result, doc in zip(results, docs):
             try:
                 parsed_result = self.output_parser.parse(result)
                 print("Parsed result: ", parsed_result)
