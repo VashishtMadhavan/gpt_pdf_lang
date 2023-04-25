@@ -4,6 +4,7 @@ from typing import Any, Dict
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from langchain.docstore.document import Document
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import create_model
@@ -15,8 +16,15 @@ from vector_store import VectorStoreWrapper
 
 FAISS_PATH = "examples_index"
 
+
+def _get_doc_key(doc: Document) -> str:
+    """Get the key for a document."""
+    return f"{doc.metadata['source']}_{doc.metadata['page']}"
+
+
 loader = DirectoryLoader(path="examples/", glob="*.pdf", loader_cls=PyPDFLoader)
 docs = loader.load()
+doc_map = {_get_doc_key(doc): doc for doc in docs}
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=3000, separators=["\n \n", "\n\n", "\n", " ", ""]
 )
@@ -94,6 +102,9 @@ def extract(entity_json: str) -> StreamingResponse:
 
     extractor = ExtractionModel(format_model=FormatModel)
     relevant_docs = extractor.get_similar_docs(db, k=100)
+    # Remove duplicate pages
+    unique_doc_keys = set(_get_doc_key(doc) for doc in relevant_docs)
+    relevant_docs = [doc_map[key] for key in unique_doc_keys]
     results = extractor.run(relevant_docs)
 
     # Generate a CSV file
