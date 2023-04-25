@@ -111,7 +111,7 @@ function App() {
       <div className="App">
         <div className="fixed sm:relative w-full sm:flex flex-col p-2 sm:p-6 space-y-1.5">
           <h1 className="text-4xl font-bold text-white" style={{ cursor: 'pointer' }}>
-              PDF GPT
+              PDF Genie
           </h1>
             <div className="inline-flex gap-x-1.5 align-middle justify-center">
                 <ModeButton title="Retrieval Mode" onClick={handleSetRetrievalMode} pressed={mode === Mode.RETRIEVAL}/>
