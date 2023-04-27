@@ -48,11 +48,21 @@ function App() {
   }
 
   const handleDownloadButtonClick = (event) => {
-    fetch(`${api_endpoint}download_csv?entity_json=${query}&results_json=${JSON.stringify(items)}`)
-      .then(response => {
-        response.blob().then(blob => downloadCsv(blob))
-      })
-      .catch(error => console.error(error));
+    const formData = {
+      entity_json: query,
+      results_json: JSON.stringify(items),
+    }
+    fetch(`${api_endpoint}download_csv`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+    .then(response => {
+      response.blob().then(blob => downloadCsv(blob))
+    })
+    .catch(error => console.error(error));
   }
 
   const handleSearchButtonClick = (event) => {

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from langchain.docstore.document import Document
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pydantic import create_model
+from pydantic import BaseModel, create_model
 from pydantic.fields import FieldInfo
 
 from models.extractor import ExtractionModel, ExtractionResult
@@ -82,9 +82,15 @@ def search(query: str) -> Dict[str, Any]:
     }
 
 
-@app.get("/download_csv")
-def download_csv(entity_json: str, results_json: str) -> StreamingResponse:
-    entities = json.loads(entity_json)
+class DownloadRequest(BaseModel):
+    entity_json: str
+    results_json: str
+
+
+@app.post("/download_csv")
+def download_csv(download_request: DownloadRequest) -> StreamingResponse:
+    entities = json.loads(download_request.entity_json)
+    results_json = download_request.results_json
     results = [ExtractionResult(**result) for result in json.loads(results_json)]
     # Generate a CSV file
     csv_file = ExtractionModel.generate_csv(entities, results)
