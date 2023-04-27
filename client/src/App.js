@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 // Components
 import SearchInput from './inputs'
-import LoadingSpinner from './spinner'
-import { PDFViewer } from './viewer'
-import { SearchButton, ModeButton, PrevButton, NextButton} from './buttons'
+import { SearchButton, ModeButton} from './buttons'
+import ExtractionView from './extraction'
+import RetrievalView from './retrieval'
 import './App.css';
 
 
@@ -13,28 +13,6 @@ const Mode = {
   RETRIEVAL: 'retrieval',
   EXTRACTION: 'extraction',
 }
-
-const PageItem = (props) => {
-  const { items, itemIndex} = props;
-  const pageItem = items[itemIndex];
-  // TODO: need a different div here for extraction mode.
-  return (
-    <div className="flex flex-col text-white sm:px-6 sm:pb-2">
-      <div className="grid grid-cols-1 p-2 pt-4 border-t border-coolGray-200">
-        <div className="flex items-center justify-center col-span-2">
-          <span className="text-md"> File: {pageItem.metadata["source"].split("/").pop()} Page: {pageItem.metadata["page"]}</span>
-        </div>
-      </div>
-      <div className='grid grid-cols-2 gap-2'>
-          <PDFViewer
-            url={pageItem.metadata["source"]}
-            pageNumber={pageItem.metadata["page"]}
-          />
-      </div>
-    </div>
-  )
-}
-
 
 function App() {
   const [answer, setAnswer] = useState('');
@@ -69,6 +47,24 @@ function App() {
     window.URL.revokeObjectURL(url);
   }
 
+  const handleDownloadButtonClick = (event) => {
+    const formData = {
+      entity_json: query,
+      results_json: JSON.stringify(items),
+    }
+    fetch(`${api_endpoint}download_csv`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+    .then(response => {
+      response.blob().then(blob => downloadCsv(blob))
+    })
+    .catch(error => console.error(error));
+  }
+
   const handleSearchButtonClick = (event) => {
     if (query === '') {
       return
@@ -85,9 +81,10 @@ function App() {
         .catch(error => console.error(error));
     } else if (mode === Mode.EXTRACTION) {
       fetch(`${api_endpoint}extract?entity_json=${query}`)
-        .then(response => {
-          setIsLoading(false);
-          response.blob().then(blob => downloadCsv(blob))
+        .then(response => response.json())
+        .then(result => {
+          setItems(result)
+          setIsLoading(false)
         })
         .catch(error => console.error(error));
     }
@@ -138,35 +135,23 @@ function App() {
                 </form>
           </div>
         </div>
-        <div className="flex flex-col text-white sm:p-2">
-          <div className="hidden sm:flex sm:flex-col h-full w-full max-h-[23rem] lg:max-h-full overflow-y-auto items-center">
-            <LoadingSpinner isLoading={isLoading} />
-            {answer && !isLoading ? (
-                  <p className='flex justify-center w-full'>{answer}</p>
-              ) : (
-                <></>
-              )}
-          </div>
-        </div>
-        <div className="flex flex-col text-white sm:p-6">
-          {answer && !isLoading ? (
-          <div>
-            <div className="flex flex-col text-white text-md">
-              <h2 className="text-2xl font-bold">References</h2>
-            </div>
-            <div className="flex flex-col text-white justify-center border-hidden">
-              <PageItem items={items} itemIndex={itemIndex} />
-              <div className="flex flex-row justify-center">
-                <PrevButton itemIndex={itemIndex} setItemIndex={setItemIndex} />
-                <span className="flex items-center justify-center">{itemIndex + 1} of {items.length}</span>
-                <NextButton itemIndex={itemIndex} setItemIndex={setItemIndex} maxItemIndex={items.length - 1} />
-              </div>
-            </div>
-          </div>
-          ) : (
-            <></>
-          )}
-        </div>
+        {mode == Mode.RETRIEVAL ? (
+          <RetrievalView 
+            answer={answer}
+            items={items}
+            itemIndex={itemIndex}
+            setItemIndex={setItemIndex}
+            isLoading={isLoading}
+          />
+        ) : (
+          <ExtractionView
+            items={items}
+            itemIndex={itemIndex}
+            setItemIndex={setItemIndex}
+            isLoading={isLoading}
+            handleDownloadButtonClick={handleDownloadButtonClick}
+          />
+        )}
       </div>
     </main>
   );

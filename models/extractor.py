@@ -80,7 +80,8 @@ class ExtractionModel(BaseDocQAModel):
                 offsets.append((-1, -1))
         return offsets, entities
 
-    def generate_csv(self, entities: Dict, results: List[ExtractionResult]) -> StringIO:
+    @classmethod
+    def generate_csv(cls, entities: Dict, results: List[ExtractionResult]) -> StringIO:
         output = StringIO()
         fieldnames = list(entities.keys()) + ["page_id", "source"]
         writer = csv.DictWriter(output, fieldnames=fieldnames)

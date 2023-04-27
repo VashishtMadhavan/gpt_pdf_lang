@@ -27,6 +27,19 @@ function ModeButton(props) {
     )
 }
 
+function DownloadButton(props) {
+    const { onClick } = props;
+    return (
+        <button
+        type="button"
+        className="inline-flex items-center gap-x-1.5 rounded-md dark:bg-dark-800 py-1.5 px-2.5 text-sm font-semibold text-[#24292f] dark:text-neutral-200 hover:bg-gray-500 bg-[#ebf0f4]"
+        onClick={onClick}
+        >
+         <span className="hidden md:block">Download CSV</span>
+        </button>
+    )
+}
+
 function PrevButton(props) {
     const { setItemIndex, itemIndex } = props;
     return (
@@ -84,4 +97,4 @@ function NextButton(props) {
     )
 }
 
-export {SearchButton, ModeButton, PrevButton, NextButton};
+export {SearchButton, ModeButton, DownloadButton, PrevButton, NextButton};

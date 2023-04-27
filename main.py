@@ -3,14 +3,14 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from langchain.docstore.document import Document
 from langchain.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pydantic import create_model
+from pydantic import BaseModel, create_model
 from pydantic.fields import FieldInfo
 
-from models.extractor import ExtractionModel
+from models.extractor import ExtractionModel, ExtractionResult
 from models.retrieval import RetrievalModel
 from vector_store import VectorStoreWrapper
 
@@ -82,8 +82,26 @@ def search(query: str) -> Dict[str, Any]:
     }
 
 
+class DownloadRequest(BaseModel):
+    entity_json: str
+    results_json: str
+
+
+@app.post("/download_csv")
+def download_csv(download_request: DownloadRequest) -> StreamingResponse:
+    entities = json.loads(download_request.entity_json)
+    results_json = download_request.results_json
+    results = [ExtractionResult(**result) for result in json.loads(results_json)]
+    # Generate a CSV file
+    csv_file = ExtractionModel.generate_csv(entities, results)
+
+    return StreamingResponse(
+        csv_file, media_type="text/csv", headers={"Content-Disposition": "attachment"}
+    )
+
+
 @app.get("/extract")
-def extract(entity_json: str) -> StreamingResponse:
+def extract(entity_json: str) -> JSONResponse:
     """Run extraction model on a set of documents
 
     Args:
@@ -107,9 +125,4 @@ def extract(entity_json: str) -> StreamingResponse:
     relevant_docs = [doc_map[key] for key in unique_doc_keys]
     results = extractor.run(relevant_docs)
 
-    # Generate a CSV file
-    csv_file = extractor.generate_csv(entities, results)
-
-    return StreamingResponse(
-        csv_file, media_type="text/csv", headers={"Content-Disposition": "attachment"}
-    )
+    return JSONResponse(content=[result._asdict() for result in results])
